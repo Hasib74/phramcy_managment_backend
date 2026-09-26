@@ -1,0 +1,1640 @@
+{
+  "info": {
+    "_postman_id": "pharmacy-os-backend-full-collection-v2",
+    "name": "Pharmacy Business Operating System — Full API Collection",
+    "description": "Enterprise API Collection for Pharmacy Operating System covering Authentication, Multi-Tenancy, Multi-Branch, Master Products, FEFO Batch Inventory Engine, POS Counter Sales, Prescriptions, Procurement & Payables, Customer CRM & Receivables, Double-Entry Accounting, HR & Payroll, Online Ecommerce & Delivery, Notifications & Audit Logs, and Executive BI Reports.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5050/api/v1", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "branchId", "value": "", "type": "string" },
+    { "key": "organizationId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "00. System Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5050/api/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5050",
+              "path": ["api", "health"]
+            }
+          },
+          "response": [
+            {
+              "name": "Health Check - Healthy Response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "http://localhost:5050/api/health",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "5050",
+                  "path": ["api", "health"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2026-09-26T22:50:00.000Z\",\n  \"uptime\": 3624.58,\n  \"service\": \"Pharmacy Business Operating System API\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01. Authentication & Tenancy",
+      "item": [
+        {
+          "name": "1. Register Organization Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data) {",
+                  "    if (jsonData.data.tokens) {",
+                  "        pm.environment.set('token', jsonData.data.tokens.accessToken);",
+                  "        pm.environment.set('refreshToken', jsonData.data.tokens.refreshToken);",
+                  "    }",
+                  "    if (jsonData.data.branch) {",
+                  "        pm.environment.set('branchId', jsonData.data.branch.id);",
+                  "    }",
+                  "    if (jsonData.data.organization) {",
+                  "        pm.environment.set('organizationId', jsonData.data.organization.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organizationName\": \"MediCare Central Pharmacy\",\n  \"slug\": \"medicare-central\",\n  \"businessType\": \"RETAIL_PHARMACY\",\n  \"ownerName\": \"Dr. Farhan Ahmed\",\n  \"ownerEmail\": \"admin@medicare.com\",\n  \"ownerPhone\": \"+8801711000111\",\n  \"password\": \"Admin@123456\",\n  \"branchName\": \"Dhanmondi Main Branch\",\n  \"currency\": \"BDT\",\n  \"addressCity\": \"Dhaka\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "response": [
+            {
+              "name": "Register - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Pharmacy organization registered successfully!\",\n  \"data\": {\n    \"organization\": {\n      \"id\": \"c1f10c79-c5c2-402b-a798-1e428ff3a970\",\n      \"name\": \"MediCare Central Pharmacy\",\n      \"slug\": \"medicare-central\",\n      \"business_type\": \"RETAIL_PHARMACY\",\n      \"currency\": \"BDT\"\n    },\n    \"branch\": {\n      \"id\": \"b188c6e2-5793-4e4b-97e3-0d531a787265\",\n      \"code\": \"BR-MAIN\",\n      \"name\": \"Dhanmondi Main Branch\"\n    },\n    \"user\": {\n      \"id\": \"e305e94b-1ca8-4720-9426-b85675b630e6\",\n      \"email\": \"admin@medicare.com\",\n      \"first_name\": \"Dr. Farhan Ahmed\"\n    },\n    \"tokens\": {\n      \"accessToken\": \"eyJhbGciOiJIUzI1NiIsIn...\",\n      \"refreshToken\": \"d748a39158d6...\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.tokens) {",
+                  "    pm.environment.set('token', jsonData.data.tokens.accessToken);",
+                  "    pm.collectionVariables.set('token', jsonData.data.tokens.accessToken);",
+                  "    if (jsonData.data.tokens.refreshToken) {",
+                  "        pm.environment.set('refreshToken', jsonData.data.tokens.refreshToken);",
+                  "    }",
+                  "    if (jsonData.data.user && jsonData.data.user.default_branch_id) {",
+                  "        pm.environment.set('branchId', jsonData.data.user.default_branch_id);",
+                  "        pm.collectionVariables.set('branchId', jsonData.data.user.default_branch_id);",
+                  "    }",
+                  "    if (jsonData.data.user && jsonData.data.user.organization_id) {",
+                  "        pm.environment.set('organizationId', jsonData.data.user.organization_id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@medicare.com\",\n  \"password\": \"Admin@123456\",\n  \"organizationSlug\": \"medicare-central\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "response": [
+            {
+              "name": "Login - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login successful!\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"e305e94b-1ca8-4720-9426-b85675b630e6\",\n      \"organization_id\": \"c1f10c79-c5c2-402b-a798-1e428ff3a970\",\n      \"default_branch_id\": \"b188c6e2-5793-4e4b-97e3-0d531a787265\",\n      \"first_name\": \"Dr. Farhan Ahmed\",\n      \"email\": \"admin@medicare.com\",\n      \"status\": \"ACTIVE\",\n      \"is_org_owner\": true\n    },\n    \"roles\": [\"OWNER\"],\n    \"tokens\": {\n      \"accessToken\": \"eyJhbGciOiJIUzI1NiIsIn...\",\n      \"refreshToken\": \"d748a39158d6...\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Get Profile (/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          },
+          "response": [
+            {
+              "name": "Get Profile - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"User profile fetched successfully\",\n  \"data\": {\n    \"id\": \"e305e94b-1ca8-4720-9426-b85675b630e6\",\n    \"firstName\": \"Dr. Farhan\",\n    \"lastName\": \"Ahmed\",\n    \"email\": \"admin@medicare.com\",\n    \"phone\": \"+8801711000111\",\n    \"organizationName\": \"MediCare Central Pharmacy\",\n    \"organizationSlug\": \"medicare-central\",\n    \"defaultBranchId\": \"b188c6e2-5793-4e4b-97e3-0d531a787265\",\n    \"roles\": [\"OWNER\"],\n    \"permissions\": [\"*\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Refresh Access Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/refresh-token", "host": ["{{baseUrl}}"], "path": ["auth", "refresh-token"] }
+          },
+          "response": [
+            {
+              "name": "Refresh Token - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Token refreshed successfully!\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsIn...\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02. Organizations & Multi-Branch",
+      "item": [
+        {
+          "name": "1. Get Organization Profile & Settings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/organizations/profile", "host": ["{{baseUrl}}"], "path": ["organizations", "profile"] }
+          },
+          "response": [
+            {
+              "name": "Profile - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Organization profile fetched successfully\",\n  \"data\": {\n    \"id\": \"c1f10c79-c5c2-402b-a798-1e428ff3a970\",\n    \"name\": \"MediCare Central Pharmacy\",\n    \"slug\": \"medicare-central\",\n    \"businessType\": \"RETAIL_PHARMACY\",\n    \"subscriptionPlan\": \"STARTER\",\n    \"currency\": \"BDT\",\n    \"currencySymbol\": \"৳\",\n    \"timezone\": \"Asia/Dhaka\",\n    \"enableFefo\": true,\n    \"enablePrescriptionCheck\": true,\n    \"enableMultiBranch\": true,\n    \"defaultVatRate\": 0.00\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Update Settings & Feature Flags",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enableFefo\": true,\n  \"enablePrescriptionCheck\": true,\n  \"enableMultiBranch\": true,\n  \"enableLoyaltyProgram\": true,\n  \"enableOnlineStore\": true,\n  \"defaultVatRate\": 5.00\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/organizations/settings", "host": ["{{baseUrl}}"], "path": ["organizations", "settings"] }
+          },
+          "response": [
+            {
+              "name": "Update Settings - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Organization settings updated successfully\",\n  \"data\": {\n    \"id\": \"c1f10c79-c5c2-402b-a798-1e428ff3a970\",\n    \"enable_fefo\": true,\n    \"enable_prescription_check\": true,\n    \"enable_multi_branch\": true,\n    \"enable_loyalty_program\": true,\n    \"enable_online_store\": true,\n    \"default_vat_rate\": 5.00\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Get Branches List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/organizations/branches", "host": ["{{baseUrl}}"], "path": ["organizations", "branches"] }
+          },
+          "response": [
+            {
+              "name": "List Branches - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Branches fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"b188c6e2-5793-4e4b-97e3-0d531a787265\",\n      \"code\": \"BR-MAIN\",\n      \"name\": \"Dhanmondi Main Branch\",\n      \"branch_type\": \"MAIN_BRANCH\",\n      \"is_main_branch\": true,\n      \"is_active\": true,\n      \"pos_invoice_prefix\": \"INV\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Create New Branch",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"BR-GULSHAN\",\n  \"name\": \"Gulshan Branch\",\n  \"branchType\": \"RETAIL_OUTLET\",\n  \"phone\": \"+8801711223344\",\n  \"email\": \"gulshan@medicare.com\",\n  \"addressStreet\": \"Road 11, Block D\",\n  \"addressCity\": \"Dhaka\",\n  \"posInvoicePrefix\": \"GUL\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/organizations/branches", "host": ["{{baseUrl}}"], "path": ["organizations", "branches"] }
+          },
+          "response": [
+            {
+              "name": "Create Branch - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Branch created successfully\",\n  \"data\": {\n    \"id\": \"b299c7f3-6804-4e5c-98e4-1e642b898376\",\n    \"code\": \"BR-GULSHAN\",\n    \"name\": \"Gulshan Branch\",\n    \"branch_type\": \"RETAIL_OUTLET\",\n    \"is_active\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "5. List Warehouses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/organizations/warehouses", "host": ["{{baseUrl}}"], "path": ["organizations", "warehouses"] }
+          },
+          "response": [
+            {
+              "name": "List Warehouses - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Warehouses fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"w111c6e2-5793-4e4b-97e3-0d531a787265\",\n      \"code\": \"WH-MAIN\",\n      \"name\": \"Main Store\",\n      \"warehouse_type\": \"BRANCH_STORE\",\n      \"is_default\": true,\n      \"branch_name\": \"Dhanmondi Main Branch\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "6. Create Warehouse",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"code\": \"WH-COLD-01\",\n  \"name\": \"Vaccine Cold Room Store\",\n  \"warehouseType\": \"COLD_ROOM\",\n  \"locationDescription\": \"Temperature controlled storage: 2C - 8C\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/organizations/warehouses", "host": ["{{baseUrl}}"], "path": ["organizations", "warehouses"] }
+          },
+          "response": [
+            {
+              "name": "Create Warehouse - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Warehouse created successfully\",\n  \"data\": {\n    \"id\": \"w222c7f3-6804-4e5c-98e4-1e642b898376\",\n    \"code\": \"WH-COLD-01\",\n    \"name\": \"Vaccine Cold Room Store\",\n    \"warehouse_type\": \"COLD_ROOM\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "7. List Staff Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/organizations/users", "host": ["{{baseUrl}}"], "path": ["organizations", "users"] }
+          },
+          "response": [
+            {
+              "name": "List Users - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Users fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"e305e94b-1ca8-4720-9426-b85675b630e6\",\n      \"first_name\": \"Dr. Farhan\",\n      \"last_name\": \"Ahmed\",\n      \"email\": \"admin@medicare.com\",\n      \"status\": \"ACTIVE\",\n      \"roles\": [\"OWNER\"]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "8. Create / Invite Staff User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"firstName\": \"Sabbir\",\n  \"lastName\": \"Hossain\",\n  \"email\": \"pharmacist.sabbir@medicare.com\",\n  \"phone\": \"+8801911998877\",\n  \"password\": \"Staff@123456\",\n  \"roleCodes\": [\"PHARMACIST\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/organizations/users", "host": ["{{baseUrl}}"], "path": ["organizations", "users"] }
+          },
+          "response": [
+            {
+              "name": "Create User - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"User created and role assigned successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"u555e94b-1ca8-4720-9426-b85675b630e6\",\n      \"email\": \"pharmacist.sabbir@medicare.com\",\n      \"firstName\": \"Sabbir\",\n      \"lastName\": \"Hossain\"\n    },\n    \"roles\": [\"PHARMACIST\"]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03. Product Catalog Master",
+      "item": [
+        {
+          "name": "1. Search Products (Paginated & Filtered)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products?page=1&limit=20&search=Napa",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "search", "value": "Napa" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Search Products - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Products fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"p001-uuid-paracetamol\",\n      \"brand_name\": \"Napa Extra 500mg/65mg\",\n      \"generic_name\": \"Paracetamol + Caffeine\",\n      \"strength\": \"500mg+65mg\",\n      \"sku\": \"SKU-NAPA-EXT-01\",\n      \"barcode\": \"8901234567890\",\n      \"pack_size\": \"10x10 Tablets\",\n      \"selling_price\": \"30.0000\",\n      \"mrp\": \"30.0000\",\n      \"min_stock_alert_level\": \"20.000\",\n      \"shelf_location\": \"Rack A-1\",\n      \"category_name\": \"Analgesics\",\n      \"manufacturer_name\": \"Beximco Pharmaceuticals Ltd.\",\n      \"total_stock\": \"150.000\"\n    }\n  ],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 1,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Create Product Master",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set('productId', jsonData.data.id);",
+                  "    pm.collectionVariables.set('productId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"brandName\": \"Napa Extra 500mg/65mg\",\n  \"genericName\": \"Paracetamol + Caffeine\",\n  \"strength\": \"500mg+65mg\",\n  \"sku\": \"SKU-NAPA-EXT-01\",\n  \"barcode\": \"8901234567890\",\n  \"packSize\": \"10x10 Tablets\",\n  \"piecesPerPack\": 100,\n  \"routeOfAdministration\": \"Oral\",\n  \"requiresPrescription\": false,\n  \"isNarcotic\": false,\n  \"isColdChain\": false,\n  \"minStockAlertLevel\": 20,\n  \"reorderQuantity\": 100,\n  \"defaultPurchasePrice\": 24.00,\n  \"mrp\": 30.00,\n  \"sellingPrice\": 30.00,\n  \"wholesalePrice\": 26.00,\n  \"vatPercent\": 0.00,\n  \"shelfLocation\": \"Rack A-1\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+          },
+          "response": [
+            {
+              "name": "Create Product - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Product created successfully\",\n  \"data\": {\n    \"id\": \"p001-uuid-paracetamol\",\n    \"brand_name\": \"Napa Extra 500mg/65mg\",\n    \"sku\": \"SKU-NAPA-EXT-01\",\n    \"barcode\": \"8901234567890\",\n    \"selling_price\": \"30.0000\",\n    \"is_active\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Get Product Details by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] }
+          },
+          "response": [
+            {
+              "name": "Product Details - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Product details fetched successfully\",\n  \"data\": {\n    \"id\": \"p001-uuid-paracetamol\",\n    \"brand_name\": \"Napa Extra 500mg/65mg\",\n    \"generic_name\": \"Paracetamol + Caffeine\",\n    \"selling_price\": \"30.0000\",\n    \"batches\": [\n      {\n        \"batch_id\": \"b001-uuid\",\n        \"batch_number\": \"BTH-2026-X01\",\n        \"expiry_date\": \"2027-10-31\",\n        \"quantity_available\": \"100.000\",\n        \"selling_price\": \"30.0000\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Get Categories List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/products/categories", "host": ["{{baseUrl}}"], "path": ["products", "categories"] }
+          },
+          "response": [
+            {
+              "name": "Categories - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Categories fetched successfully\",\n  \"data\": [\n    { \"id\": \"cat-1\", \"name\": \"Antibiotics\", \"slug\": \"antibiotics\" },\n    { \"id\": \"cat-2\", \"name\": \"Analgesics & Antipyretics\", \"slug\": \"analgesics\" },\n    { \"id\": \"cat-3\", \"name\": \"Cardiovascular\", \"slug\": \"cardiovascular\" }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "5. Get Generics List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/products/generics", "host": ["{{baseUrl}}"], "path": ["products", "generics"] }
+          },
+          "response": [
+            {
+              "name": "Generics - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Generics fetched successfully\",\n  \"data\": [\n    { \"id\": \"gen-1\", \"name\": \"Paracetamol + Caffeine\", \"therapeutic_class\": \"Analgesic\" },\n    { \"id\": \"gen-2\", \"name\": \"Esomeprazole Magnesium\", \"therapeutic_class\": \"Proton Pump Inhibitor\" }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "6. Get Manufacturers List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/products/manufacturers", "host": ["{{baseUrl}}"], "path": ["products", "manufacturers"] }
+          },
+          "response": [
+            {
+              "name": "Manufacturers - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Manufacturers fetched successfully\",\n  \"data\": [\n    { \"id\": \"m-1\", \"name\": \"Square Pharmaceuticals Ltd.\", \"code\": \"SQUARE\" },\n    { \"id\": \"m-2\", \"name\": \"Beximco Pharmaceuticals Ltd.\", \"code\": \"BEXIMCO\" },\n    { \"id\": \"m-3\", \"name\": \"Incepta Pharmaceuticals Ltd.\", \"code\": \"INCEPTA\" }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "7. Get Metadata (Dosage Forms & Measurement Units)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/products/metadata", "host": ["{{baseUrl}}"], "path": ["products", "metadata"] }
+          },
+          "response": [
+            {
+              "name": "Metadata - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Dosage forms and units metadata fetched\",\n  \"data\": {\n    \"dosageForms\": [\n      { \"id\": \"df-1\", \"name\": \"Tablet\", \"short_code\": \"TAB\" },\n      { \"id\": \"df-2\", \"name\": \"Capsule\", \"short_code\": \"CAP\" },\n      { \"id\": \"df-3\", \"name\": \"Syrup\", \"short_code\": \"SYR\" }\n    ],\n    \"units\": [\n      { \"id\": \"u-1\", \"name\": \"Piece\", \"short_code\": \"PCS\" },\n      { \"id\": \"u-2\", \"name\": \"Strip\", \"short_code\": \"STP\" },\n      { \"id\": \"u-3\", \"name\": \"Box\", \"short_code\": \"BOX\" }\n    ]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04. Inventory & FEFO Batch Engine",
+      "item": [
+        {
+          "name": "1. Get Real-Time Stock Balances",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/inventory/stocks?lowStockOnly=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "stocks"],
+              "query": [{ "key": "lowStockOnly", "value": "false" }]
+            }
+          },
+          "response": [
+            {
+              "name": "Stock Levels - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Stock levels fetched successfully\",\n  \"data\": [\n    {\n      \"product_id\": \"p001-uuid\",\n      \"brand_name\": \"Napa Extra 500mg/65mg\",\n      \"sku\": \"SKU-NAPA-EXT-01\",\n      \"batch_number\": \"BTH-2026-X01\",\n      \"expiry_date\": \"2027-10-31\",\n      \"quantity_available\": \"100.000\",\n      \"quantity_reserved\": \"0.000\",\n      \"warehouse_name\": \"Main Store\",\n      \"rack_location\": \"Rack A-1\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Calculate FEFO Batch Recommendation",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/inventory/fefo-recommendation?productId={{productId}}&quantity=15&branchId={{branchId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "fefo-recommendation"],
+              "query": [
+                { "key": "productId", "value": "{{productId}}" },
+                { "key": "quantity", "value": "15" },
+                { "key": "branchId", "value": "{{branchId}}" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "FEFO Recommendation - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"FEFO batch recommendation calculated\",\n  \"data\": {\n    \"productId\": \"p001-uuid\",\n    \"requestedQuantity\": 15,\n    \"allocatedBatches\": [\n      {\n        \"batchId\": \"b001-uuid\",\n        \"batchNumber\": \"BTH-2026-X01\",\n        \"expiryDate\": \"2026-11-30\",\n        \"quantityAvailable\": 10,\n        \"quantityToTake\": 10,\n        \"sellingPrice\": 30.00\n      },\n      {\n        \"batchId\": \"b002-uuid\",\n        \"batchNumber\": \"BTH-2026-X02\",\n        \"expiryDate\": \"2027-04-30\",\n        \"quantityAvailable\": 50,\n        \"quantityToTake\": 5,\n        \"sellingPrice\": 30.00\n      }\n    ],\n    \"isFulfilled\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Expiring Batches Risk Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/inventory/expiring-batches?days=90",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "expiring-batches"],
+              "query": [{ "key": "days", "value": "90" }]
+            }
+          },
+          "response": [
+            {
+              "name": "Expiring Batches - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Expiring batches fetched successfully\",\n  \"data\": [\n    {\n      \"product_id\": \"p001-uuid\",\n      \"brand_name\": \"Napa Extra 500mg/65mg\",\n      \"batch_number\": \"BTH-2026-X01\",\n      \"expiry_date\": \"2026-10-15\",\n      \"days_remaining\": 19,\n      \"quantity_available\": \"25.000\",\n      \"capital_at_risk\": \"600.0000\",\n      \"expiry_urgency\": \"EXPIRING_30_DAYS\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Record Stock Adjustment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"warehouseId\": \"{{warehouseId}}\",\n  \"reason\": \"PHYSICAL_COUNT_DISCREPANCY\",\n  \"notes\": \"Physical stock audit reconciliation\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"batchId\": \"{{batchId}}\",\n      \"previousQuantity\": 50,\n      \"newQuantity\": 48,\n      \"differenceQuantity\": -2,\n      \"unitCost\": 24.00\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/adjustments", "host": ["{{baseUrl}}"], "path": ["inventory", "adjustments"] }
+          },
+          "response": [
+            {
+              "name": "Stock Adjustment - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Stock adjustment completed successfully\",\n  \"data\": {\n    \"adjustmentId\": \"adj-001-uuid\",\n    \"adjustmentNumber\": \"ADJ-2026-0001\",\n    \"adjustedItemsCount\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "5. Request Stock Transfer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set('transferId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromBranchId\": \"{{branchId}}\",\n  \"toBranchId\": \"b299c7f3-6804-4e5c-98e4-1e642b898376\",\n  \"fromWarehouseId\": \"{{warehouseId}}\",\n  \"toWarehouseId\": \"w222c7f3-6804-4e5c-98e4-1e642b898376\",\n  \"notes\": \"Branch transfer for emergency low stock fulfillment\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"batchId\": \"{{batchId}}\",\n      \"quantity\": 20,\n      \"unitCost\": 24.00\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/transfers", "host": ["{{baseUrl}}"], "path": ["inventory", "transfers"] }
+          },
+          "response": [
+            {
+              "name": "Request Transfer - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Stock transfer requested successfully\",\n  \"data\": {\n    \"id\": \"tr-001-uuid\",\n    \"transferNumber\": \"TR-2026-0001\",\n    \"status\": \"REQUESTED\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "6. Update Transfer Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DISPATCHED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/inventory/transfers/{{transferId}}/status", "host": ["{{baseUrl}}"], "path": ["inventory", "transfers", "{{transferId}}", "status"] }
+          },
+          "response": [
+            {
+              "name": "Update Transfer - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Stock transfer dispatched successfully\",\n  \"data\": {\n    \"id\": \"tr-001-uuid\",\n    \"status\": \"DISPATCHED\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05. POS & Counter Sales",
+      "item": [
+        {
+          "name": "1. Fast Barcode / SKU / Generic Search",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pos/search?q=8901234567890",
+              "host": ["{{baseUrl}}"],
+              "path": ["pos", "search"],
+              "query": [{ "key": "q", "value": "8901234567890" }]
+            }
+          },
+          "response": [
+            {
+              "name": "POS Search - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Products searched successfully\",\n  \"data\": [\n    {\n      \"id\": \"p001-uuid\",\n      \"brand_name\": \"Napa Extra 500mg/65mg\",\n      \"generic_name\": \"Paracetamol + Caffeine\",\n      \"selling_price\": \"30.0000\",\n      \"batches\": [\n        {\n          \"batch_id\": \"b001-uuid\",\n          \"batch_number\": \"BTH-2026-X01\",\n          \"expiry_date\": \"2027-10-31\",\n          \"quantity_available\": \"100.000\",\n          \"selling_price\": \"30.0000\"\n        }\n      ]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Open Cash Register Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set('posSessionId', jsonData.data.id);",
+                  "    pm.collectionVariables.set('posSessionId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"openingCash\": 2000.00\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/pos/sessions/open", "host": ["{{baseUrl}}"], "path": ["pos", "sessions", "open"] }
+          },
+          "response": [
+            {
+              "name": "Open Session - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"POS session opened successfully\",\n  \"data\": {\n    \"id\": \"sess-001-uuid\",\n    \"opening_cash_balance\": \"2000.00\",\n    \"status\": \"OPEN\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. POS Sale Checkout (Auto FEFO / Split Payment)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"posSessionId\": \"{{posSessionId}}\",\n  \"customerId\": null,\n  \"subtotal\": 150.00,\n  \"discountAmount\": 0.00,\n  \"vatAmount\": 0.00,\n  \"grandTotal\": 150.00,\n  \"paidAmount\": 150.00,\n  \"changeReturned\": 0.00,\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 5,\n      \"unitPrice\": 30.00\n    }\n  ],\n  \"payments\": [\n    {\n      \"paymentMethod\": \"CASH\",\n      \"amount\": 100.00\n    },\n    {\n      \"paymentMethod\": \"MFS_BKASH\",\n      \"amount\": 50.00,\n      \"transactionReference\": \"TRX90812384\"\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/pos/checkout", "host": ["{{baseUrl}}"], "path": ["pos", "checkout"] }
+          },
+          "response": [
+            {
+              "name": "POS Checkout - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Sale completed successfully & invoice generated\",\n  \"data\": {\n    \"saleId\": \"sale-001-uuid\",\n    \"invoiceNumber\": \"INV-202609001\",\n    \"grandTotal\": 150.00,\n    \"paidAmount\": 150.00,\n    \"dueAmount\": 0.00,\n    \"paymentStatus\": \"PAID\",\n    \"itemsCount\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Hold Current POS Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set('holdId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"holdReference\": \"Customer Left Wallet in Car\",\n  \"cartItems\": [\n    { \"productId\": \"{{productId}}\", \"quantity\": 3, \"unitPrice\": 30.00 }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/pos/hold", "host": ["{{baseUrl}}"], "path": ["pos", "hold"] }
+          },
+          "response": [
+            {
+              "name": "Hold Cart - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Sale held successfully\",\n  \"data\": {\n    \"id\": \"hld-001-uuid\",\n    \"hold_reference\": \"Customer Left Wallet in Car\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "5. List Held Carts",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/pos/held", "host": ["{{baseUrl}}"], "path": ["pos", "held"] }
+          },
+          "response": [
+            {
+              "name": "List Held - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Held sales fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"hld-001-uuid\",\n      \"hold_reference\": \"Customer Left Wallet in Car\",\n      \"held_at\": \"2026-09-26T22:50:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "6. Delete / Resume Held Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/pos/held/{{holdId}}", "host": ["{{baseUrl}}"], "path": ["pos", "held", "{{holdId}}"] }
+          },
+          "response": [
+            {
+              "name": "Delete Held - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Held sale resumed/deleted successfully\",\n  \"data\": {}\n}"
+            }
+          ]
+        },
+        {
+          "name": "7. Close Cash Register Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"closingCashCounted\": 2100.00,\n  \"notes\": \"Register closed and cash drawer counted successfully\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/pos/sessions/{{posSessionId}}/close", "host": ["{{baseUrl}}"], "path": ["pos", "sessions", "{{posSessionId}}", "close"] }
+          },
+          "response": [
+            {
+              "name": "Close Session - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"POS session closed successfully\",\n  \"data\": {\n    \"id\": \"sess-001-uuid\",\n    \"status\": \"CLOSED\",\n    \"opening_cash_balance\": \"2000.00\",\n    \"total_cash_sales\": \"100.00\",\n    \"expected_cash_balance\": \"2100.00\",\n    \"closing_cash_counted\": \"2100.00\",\n    \"cash_discrepancy\": \"0.00\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06. Prescriptions Management",
+      "item": [
+        {
+          "name": "1. Upload Prescription",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set('prescriptionId', jsonData.data.id);",
+                  "    pm.collectionVariables.set('prescriptionId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"customerId\": \"{{customerId}}\",\n  \"doctorName\": \"Dr. Asaduzzaman MD\",\n  \"hospitalName\": \"Square Hospital Dhaka\",\n  \"prescriptionDate\": \"2026-09-26\",\n  \"diagnosis\": \"Acute viral fever & gastric hyperacidity\",\n  \"items\": [\n    {\n      \"medicineName\": \"Napa Extra 500mg\",\n      \"dosage\": \"1+0+1\",\n      \"frequency\": \"After meal\",\n      \"durationDays\": 5,\n      \"totalQuantitySuggested\": 10,\n      \"instructions\": \"Take with a full glass of water\"\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/prescriptions", "host": ["{{baseUrl}}"], "path": ["prescriptions"] }
+          },
+          "response": [
+            {
+              "name": "Upload Prescription - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Prescription uploaded successfully\",\n  \"data\": {\n    \"id\": \"rx-001-uuid\",\n    \"doctor_name\": \"Dr. Asaduzzaman MD\",\n    \"status\": \"PENDING_REVIEW\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Get Prescriptions List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions?status=PENDING_REVIEW",
+              "host": ["{{baseUrl}}"],
+              "path": ["prescriptions"],
+              "query": [{ "key": "status", "value": "PENDING_REVIEW" }]
+            }
+          },
+          "response": [
+            {
+              "name": "Prescriptions List - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Prescriptions fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"rx-001-uuid\",\n      \"doctor_name\": \"Dr. Asaduzzaman MD\",\n      \"hospital_name\": \"Square Hospital Dhaka\",\n      \"status\": \"PENDING_REVIEW\",\n      \"items\": [\n        {\n          \"medicine_name\": \"Napa Extra 500mg\",\n          \"dosage\": \"1+0+1\",\n          \"total_quantity_suggested\": \"10.00\"\n        }\n      ]\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Pharmacist Review Prescription",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"pharmacistNotes\": \"Prescription verified against registered doctor database. Approved for counter dispensing.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/prescriptions/{{prescriptionId}}/review", "host": ["{{baseUrl}}"], "path": ["prescriptions", "{{prescriptionId}}", "review"] }
+          },
+          "response": [
+            {
+              "name": "Review Prescription - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Prescription reviewed successfully\",\n  \"data\": {\n    \"id\": \"rx-001-uuid\",\n    \"status\": \"APPROVED\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07. Procurement & Purchases",
+      "item": [
+        {
+          "name": "1. Get Suppliers List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/purchases/suppliers", "host": ["{{baseUrl}}"], "path": ["purchases", "suppliers"] }
+          },
+          "response": [
+            {
+              "name": "Suppliers - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Suppliers fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"sup-001-uuid\",\n      \"name\": \"Square Distribution Ltd.\",\n      \"company_name\": \"Square Pharmaceuticals Distribution\",\n      \"phone\": \"+8801712334455\",\n      \"current_balance\": \"1300.00\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Create Supplier Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set('supplierId', jsonData.data.id);",
+                  "    pm.collectionVariables.set('supplierId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Square Distribution Ltd.\",\n  \"companyName\": \"Square Pharmaceuticals Distribution\",\n  \"contactPerson\": \"Mr. Mahmudul Hasan\",\n  \"phone\": \"+8801712334455\",\n  \"email\": \"orders@squarepharma.com\",\n  \"addressCity\": \"Dhaka\",\n  \"creditLimit\": 200000.00,\n  \"paymentTermsDays\": 30\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/purchases/suppliers", "host": ["{{baseUrl}}"], "path": ["purchases", "suppliers"] }
+          },
+          "response": [
+            {
+              "name": "Create Supplier - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Supplier created successfully\",\n  \"data\": {\n    \"id\": \"sup-001-uuid\",\n    \"company_name\": \"Square Pharmaceuticals Distribution\",\n    \"is_active\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Receive Purchase Invoice (Ingests Batches & Stock)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"warehouseId\": \"{{warehouseId}}\",\n  \"supplierId\": \"{{supplierId}}\",\n  \"invoiceNumber\": \"SQ-INV-2026-9081\",\n  \"purchaseDate\": \"2026-09-26\",\n  \"subtotal\": 2400.00,\n  \"discountAmount\": 100.00,\n  \"vatAmount\": 0.00,\n  \"grandTotal\": 2300.00,\n  \"paidAmount\": 1000.00,\n  \"paymentMethod\": \"BANK_TRANSFER\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"batchNumber\": \"BTH-2026-X99\",\n      \"mfgDate\": \"2026-08-01\",\n      \"expiryDate\": \"2028-08-01\",\n      \"quantity\": 100,\n      \"freeQuantity\": 10,\n      \"unitPurchaseCost\": 24.00,\n      \"mrp\": 30.00,\n      \"sellingPrice\": 30.00,\n      \"wholesalePrice\": 26.00\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/purchases/invoices", "host": ["{{baseUrl}}"], "path": ["purchases", "invoices"] }
+          },
+          "response": [
+            {
+              "name": "Receive Purchase Invoice - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Purchase invoice received & stock batches ingested successfully\",\n  \"data\": {\n    \"purchaseId\": \"pur-001-uuid\",\n    \"invoiceNumber\": \"SQ-INV-2026-9081\",\n    \"grandTotal\": 2300.00,\n    \"paidAmount\": 1000.00,\n    \"dueAmount\": 1300.00,\n    \"paymentStatus\": \"PARTIALLY_PAID\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Get Supplier Ledger",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/purchases/suppliers/{{supplierId}}/ledger", "host": ["{{baseUrl}}"], "path": ["purchases", "suppliers", "{{supplierId}}", "ledger"] }
+          },
+          "response": [
+            {
+              "name": "Supplier Ledger - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Supplier ledger fetched successfully\",\n  \"data\": [\n    {\n      \"entry_date\": \"2026-09-26\",\n      \"entry_type\": \"PURCHASE_INVOICE\",\n      \"debit_amount\": \"0.00\",\n      \"credit_amount\": \"2300.00\",\n      \"running_balance\": \"2300.00\",\n      \"description\": \"Purchase invoice SQ-INV-2026-9081\"\n    },\n    {\n      \"entry_date\": \"2026-09-26\",\n      \"entry_type\": \"PAYMENT\",\n      \"debit_amount\": \"1000.00\",\n      \"credit_amount\": \"0.00\",\n      \"running_balance\": \"1300.00\",\n      \"description\": \"Initial payment for invoice SQ-INV-2026-9081\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08. Customer CRM & Dues",
+      "item": [
+        {
+          "name": "1. Get Customers Directory",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/customers", "host": ["{{baseUrl}}"], "path": ["customers"] }
+          },
+          "response": [
+            {
+              "name": "Customers - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Customers fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"cust-001-uuid\",\n      \"name\": \"Kamrul Islam\",\n      \"phone\": \"+8801911998877\",\n      \"current_due\": \"500.00\",\n      \"loyalty_points\": \"15.00\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Create Customer Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set('customerId', jsonData.data.id);",
+                  "    pm.collectionVariables.set('customerId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Kamrul Islam\",\n  \"phone\": \"+8801911998877\",\n  \"email\": \"kamrul@gmail.com\",\n  \"customerType\": \"RETAIL\",\n  \"creditLimit\": 5000.00,\n  \"addressCity\": \"Dhaka\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/customers", "host": ["{{baseUrl}}"], "path": ["customers"] }
+          },
+          "response": [
+            {
+              "name": "Create Customer - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Customer created successfully\",\n  \"data\": {\n    \"id\": \"cust-001-uuid\",\n    \"name\": \"Kamrul Islam\",\n    \"phone\": \"+8801911998877\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Record Customer Due Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"customerId\": \"{{customerId}}\",\n  \"amount\": 500.00,\n  \"paymentMethod\": \"CASH\",\n  \"notes\": \"Due settlement payment\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/customers/due-payments", "host": ["{{baseUrl}}"], "path": ["customers", "due-payments"] }
+          },
+          "response": [
+            {
+              "name": "Customer Due Payment - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Customer due payment recorded successfully\",\n  \"data\": {\n    \"paymentId\": \"cpay-001-uuid\",\n    \"paymentNumber\": \"CPAY-2026-0001\",\n    \"amount\": 500.00,\n    \"remainingDue\": 0.00\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Get Customer Receivables Ledger",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/customers/{{customerId}}/ledger", "host": ["{{baseUrl}}"], "path": ["customers", "{{customerId}}", "ledger"] }
+          },
+          "response": [
+            {
+              "name": "Customer Ledger - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Customer ledger fetched successfully\",\n  \"data\": [\n    {\n      \"entry_date\": \"2026-09-26\",\n      \"entry_type\": \"SALE_INVOICE\",\n      \"debit_amount\": \"500.00\",\n      \"credit_amount\": \"0.00\",\n      \"running_balance\": \"500.00\"\n    },\n    {\n      \"entry_date\": \"2026-09-26\",\n      \"entry_type\": \"DUE_PAYMENT\",\n      \"debit_amount\": \"0.00\",\n      \"credit_amount\": \"500.00\",\n      \"running_balance\": \"0.00\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09. Accounting, Finance & Expenses",
+      "item": [
+        {
+          "name": "1. Get Chart of Accounts",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/accounting/chart-of-accounts", "host": ["{{baseUrl}}"], "path": ["accounting", "chart-of-accounts"] }
+          },
+          "response": [
+            {
+              "name": "Chart of Accounts - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Chart of accounts fetched successfully\",\n  \"data\": [\n    { \"id\": \"coa-1\", \"account_code\": \"1001\", \"account_name\": \"Cash in Hand\", \"account_type\": \"ASSET\", \"current_balance\": \"15420.00\" },\n    { \"id\": \"coa-2\", \"account_code\": \"1002\", \"account_name\": \"Bank Accounts\", \"account_type\": \"ASSET\", \"current_balance\": \"125000.00\" },\n    { \"id\": \"coa-3\", \"account_code\": \"2001\", \"account_name\": \"Accounts Payable (Suppliers)\", \"account_type\": \"LIABILITY\", \"current_balance\": \"1300.00\" },\n    { \"id\": \"coa-4\", \"account_code\": \"4001\", \"account_name\": \"Sales Revenue\", \"account_type\": \"REVENUE\", \"current_balance\": \"45200.00\" }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Create Double-Entry Journal Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"entryDate\": \"2026-09-26\",\n  \"narration\": \"Transfer cash from store drawer to City Bank account\",\n  \"lines\": [\n    {\n      \"accountId\": \"ACCOUNT_BANK_UUID\",\n      \"debitAmount\": 5000.00,\n      \"creditAmount\": 0.00,\n      \"memo\": \"Bank deposit\"\n    },\n    {\n      \"accountId\": \"ACCOUNT_CASH_UUID\",\n      \"debitAmount\": 0.00,\n      \"creditAmount\": 5000.00,\n      \"memo\": \"Cash drawer withdrawal\"\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/accounting/journal-entries", "host": ["{{baseUrl}}"], "path": ["accounting", "journal-entries"] }
+          },
+          "response": [
+            {
+              "name": "Journal Entry - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Journal entry recorded successfully\",\n  \"data\": {\n    \"id\": \"je-001-uuid\",\n    \"entry_number\": \"JE-2026-0001\",\n    \"total_debit\": 5000.00,\n    \"total_credit\": 5000.00\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Get Expenses List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/accounting/expenses", "host": ["{{baseUrl}}"], "path": ["accounting", "expenses"] }
+          },
+          "response": [
+            {
+              "name": "Expenses List - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Expenses fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"exp-001-uuid\",\n      \"voucher_number\": \"EXP-2026-001\",\n      \"title\": \"Store Electricity Bill September 2026\",\n      \"total_amount\": \"4500.00\",\n      \"payment_method\": \"MFS_BKASH\",\n      \"payee_name\": \"DESCO\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Record Expense Voucher",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"title\": \"Store Electricity Bill September 2026\",\n  \"amount\": 4500.00,\n  \"vatAmount\": 0.00,\n  \"paymentMethod\": \"MFS_BKASH\",\n  \"payeeName\": \"DESCO\",\n  \"notes\": \"Monthly branch electricity\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/accounting/expenses", "host": ["{{baseUrl}}"], "path": ["accounting", "expenses"] }
+          },
+          "response": [
+            {
+              "name": "Record Expense - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Expense voucher recorded successfully\",\n  \"data\": {\n    \"id\": \"exp-001-uuid\",\n    \"voucher_number\": \"EXP-2026-001\",\n    \"total_amount\": 4500.00\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "5. Get Daily Closing Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounting/daily-closing?date=2026-09-26",
+              "host": ["{{baseUrl}}"],
+              "path": ["accounting", "daily-closing"],
+              "query": [{ "key": "date", "value": "2026-09-26" }]
+            }
+          },
+          "response": [
+            {
+              "name": "Daily Closing - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Daily closing report generated\",\n  \"data\": {\n    \"date\": \"2026-09-26\",\n    \"total_sales_amount\": \"150.00\",\n    \"total_cash_sales\": \"100.00\",\n    \"total_card_sales\": \"0.00\",\n    \"total_mfs_sales\": \"50.00\",\n    \"total_expenses\": \"4500.00\",\n    \"total_supplier_payments\": \"1000.00\",\n    \"opening_cash\": \"2000.00\",\n    \"expected_closing_cash\": \"2100.00\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10. HR, Attendance & Payroll",
+      "item": [
+        {
+          "name": "1. Get Employees List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/hr/employees", "host": ["{{baseUrl}}"], "path": ["hr", "employees"] }
+          },
+          "response": [
+            {
+              "name": "Employees - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Employees fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"emp-001-uuid\",\n      \"employee_code\": \"EMP-001\",\n      \"first_name\": \"Tariqul\",\n      \"last_name\": \"Islam\",\n      \"phone\": \"+8801711223388\",\n      \"basic_salary\": \"25000.00\",\n      \"gross_salary\": \"32000.00\",\n      \"employment_status\": \"ACTIVE\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Create Employee Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.environment.set('employeeId', jsonData.data.id);",
+                  "    pm.collectionVariables.set('employeeId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"firstName\": \"Tariqul\",\n  \"lastName\": \"Islam\",\n  \"phone\": \"+8801711223388\",\n  \"email\": \"tariqul@medicare.com\",\n  \"joiningDate\": \"2026-01-01\",\n  \"basicSalary\": 25000.00,\n  \"houseRentAllowance\": 4000.00,\n  \"medicalAllowance\": 2000.00,\n  \"transportAllowance\": 1000.00,\n  \"grossSalary\": 32000.00,\n  \"bankName\": \"City Bank Ltd.\",\n  \"bankAccountNumber\": \"110293849102\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/hr/employees", "host": ["{{baseUrl}}"], "path": ["hr", "employees"] }
+          },
+          "response": [
+            {
+              "name": "Create Employee - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Employee created successfully\",\n  \"data\": {\n    \"id\": \"emp-001-uuid\",\n    \"employee_code\": \"EMP-001\",\n    \"first_name\": \"Tariqul\",\n    \"gross_salary\": \"32000.00\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Record Attendance (Check-in / Check-out)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"employeeId\": \"{{employeeId}}\",\n  \"attendanceDate\": \"2026-09-26\",\n  \"action\": \"CHECK_IN\",\n  \"verificationMethod\": \"MANUAL\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/hr/attendance", "host": ["{{baseUrl}}"], "path": ["hr", "attendance"] }
+          },
+          "response": [
+            {
+              "name": "Record Attendance - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Attendance check-in recorded successfully\",\n  \"data\": {\n    \"id\": \"att-001-uuid\",\n    \"employee_id\": \"emp-001-uuid\",\n    \"action\": \"CHECK_IN\",\n    \"check_in_time\": \"2026-09-26T09:00:00.000Z\",\n    \"status\": \"PRESENT\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Process Monthly Payroll",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"month\": 9,\n  \"year\": 2026\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/hr/payroll/process", "host": ["{{baseUrl}}"], "path": ["hr", "payroll", "process"] }
+          },
+          "response": [
+            {
+              "name": "Process Payroll - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Monthly payroll cycle processed successfully\",\n  \"data\": {\n    \"payrollCycleId\": \"pay-001-uuid\",\n    \"month\": 9,\n    \"year\": 2026,\n    \"totalEmployeesProcessed\": 1,\n    \"totalGrossAmount\": \"32000.00\",\n    \"totalNetAmount\": \"32000.00\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11. Ecommerce Orders & Delivery",
+      "item": [
+        {
+          "name": "1. Get Website CMS Config",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/orders/website", "host": ["{{baseUrl}}"], "path": ["orders", "website"] }
+          },
+          "response": [
+            {
+              "name": "Get Website - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Website CMS config fetched successfully\",\n  \"data\": {\n    \"site_title\": \"MediCare Online Pharmacy\",\n    \"subdomain\": \"medicare-central\",\n    \"primary_theme_color\": \"#059669\",\n    \"is_published\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Update Website CMS Config",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"siteTitle\": \"MediCare 24/7 Digital Pharmacy\",\n  \"tagline\": \"Authentic Medicines Delivered to Your Doorstep\",\n  \"heroHeadline\": \"Order Genuine Medicines in 30 Minutes\",\n  \"heroDescription\": \"Wide selection of prescription & OTC medicines, vitamins, and baby care products.\",\n  \"primaryThemeColor\": \"#059669\",\n  \"contactPhone\": \"+8801711000111\",\n  \"isPublished\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/orders/website", "host": ["{{baseUrl}}"], "path": ["orders", "website"] }
+          },
+          "response": [
+            {
+              "name": "Update Website - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Website CMS config updated successfully\",\n  \"data\": {\n    \"site_title\": \"MediCare 24/7 Digital Pharmacy\",\n    \"tagline\": \"Authentic Medicines Delivered to Your Doorstep\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Place Online Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.orderId) {",
+                  "    pm.environment.set('orderId', jsonData.data.orderId);",
+                  "    pm.collectionVariables.set('orderId', jsonData.data.orderId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branchId\": \"{{branchId}}\",\n  \"recipientName\": \"Tanvir Ahmed\",\n  \"recipientPhone\": \"+8801719876543\",\n  \"deliveryAddressStreet\": \"House 45, Road 8, Dhanmondi\",\n  \"deliveryAddressCity\": \"Dhaka\",\n  \"subtotal\": 120.00,\n  \"deliveryFee\": 50.00,\n  \"grandTotal\": 170.00,\n  \"paymentMethod\": \"COD\",\n  \"customerNotes\": \"Please ring doorbell twice\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 4,\n      \"unitPrice\": 30.00\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] }
+          },
+          "response": [
+            {
+              "name": "Place Order - Success 201",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Online order placed successfully\",\n  \"data\": {\n    \"orderId\": \"ord-001-uuid\",\n    \"orderNumber\": \"ORD-2026-0001\",\n    \"grandTotal\": 170.00,\n    \"orderStatus\": \"PENDING\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. List Online Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/orders?status=PENDING", "host": ["{{baseUrl}}"], "path": ["orders"], "query": [{ "key": "status", "value": "PENDING" }] }
+          },
+          "response": [
+            {
+              "name": "List Orders - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Orders fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"ord-001-uuid\",\n      \"order_number\": \"ORD-2026-0001\",\n      \"recipient_name\": \"Tanvir Ahmed\",\n      \"recipient_phone\": \"+8801719876543\",\n      \"grand_total\": \"170.00\",\n      \"payment_method\": \"COD\",\n      \"order_status\": \"PENDING\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "5. Update Order Status & Assign Rider",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ASSIGNED_TO_RIDER\",\n  \"riderId\": \"RIDER_UUID_HERE\",\n  \"remarks\": \"Assigned to nearest motorbike delivery rider\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}/status", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}", "status"] }
+          },
+          "response": [
+            {
+              "name": "Update Order Status - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Order status updated successfully\",\n  \"data\": {\n    \"id\": \"ord-001-uuid\",\n    \"order_status\": \"ASSIGNED_TO_RIDER\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "6. Get Delivery Riders List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/orders/riders", "host": ["{{baseUrl}}"], "path": ["orders", "riders"] }
+          },
+          "response": [
+            {
+              "name": "Delivery Riders - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Delivery riders fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"rdr-001-uuid\",\n      \"name\": \"Kabir Hossain\",\n      \"phone\": \"+8801811445566\",\n      \"vehicle_type\": \"MOTORCYCLE\",\n      \"current_status\": \"AVAILABLE\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12. Notifications & Audit Logs",
+      "item": [
+        {
+          "name": "1. Get Alerts & Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/notifications?unreadOnly=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"],
+              "query": [{ "key": "unreadOnly", "value": "true" }]
+            }
+          },
+          "response": [
+            {
+              "name": "Notifications - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Notifications fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"notif-001-uuid\",\n      \"notification_type\": \"LOW_STOCK_ALERT\",\n      \"priority\": \"HIGH\",\n      \"title\": \"Low Stock Alert: Napa Extra\",\n      \"message\": \"Napa Extra 500mg has reached low stock threshold (15 units remaining).\",\n      \"is_read\": false,\n      \"created_at\": \"2026-09-26T22:50:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/notifications/NOTIF_UUID_HERE/read", "host": ["{{baseUrl}}"], "path": ["notifications", "NOTIF_UUID_HERE", "read"] }
+          },
+          "response": [
+            {
+              "name": "Mark Read - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Notification marked as read\",\n  \"data\": {\n    \"id\": \"notif-001-uuid\",\n    \"is_read\": true,\n    \"read_at\": \"2026-09-26T22:55:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Get System Audit Trail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/audit-logs?limit=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "audit-logs"],
+              "query": [{ "key": "limit", "value": "100" }]
+            }
+          },
+          "response": [
+            {
+              "name": "Audit Logs - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Audit logs fetched successfully\",\n  \"data\": [\n    {\n      \"id\": \"aud-001-uuid\",\n      \"action\": \"CREATE\",\n      \"module\": \"POS\",\n      \"table_name\": \"sales\",\n      \"change_summary\": \"POS sale invoice INV-202609001 issued for BDT 150.00\",\n      \"user_email\": \"admin@medicare.com\",\n      \"created_at\": \"2026-09-26T22:50:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "13. Executive Reports & BI Analytics",
+      "item": [
+        {
+          "name": "1. Get Executive Dashboard Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "x-branch-id", "value": "{{branchId}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/reports/dashboard-overview", "host": ["{{baseUrl}}"], "path": ["reports", "dashboard-overview"] }
+          },
+          "response": [
+            {
+              "name": "Executive Dashboard Overview - Success 200",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"Dashboard overview data fetched successfully\",\n  \"data\": {\n    \"summary\": {\n      \"todaySales\": 4850.00,\n      \"todayGrossProfit\": 1240.00,\n      \"todayExpenses\": 450.00,\n      \"todayNetProfit\": 790.00,\n      \"totalCustomerDue\": 15200.00,\n      \"totalSupplierDue\": 28400.00,\n      \"lowStockItemsCount\": 4,\n      \"expiringBatchesCount\": 2\n    },\n    \"salesTrendLast7Days\": [\n      { \"date\": \"2026-09-20\", \"sales\": 12400.00 },\n      { \"date\": \"2026-09-21\", \"sales\": 14200.00 },\n      { \"date\": \"2026-09-22\", \"sales\": 11800.00 },\n      { \"date\": \"2026-09-23\", \"sales\": 15600.00 },\n      { \"date\": \"2026-09-24\", \"sales\": 13900.00 },\n      { \"date\": \"2026-09-25\", \"sales\": 16800.00 },\n      { \"date\": \"2026-09-26\", \"sales\": 4850.00 }\n    ],\n    \"topSellingMedicines\": [\n      { \"brand_name\": \"Napa Extra 500mg\", \"quantity_sold\": 240, \"revenue\": 7200.00 },\n      { \"brand_name\": \"Sergel 20mg\", \"quantity_sold\": 180, \"revenue\": 1260.00 }\n    ]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

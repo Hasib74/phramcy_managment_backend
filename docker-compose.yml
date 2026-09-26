@@ -1,0 +1,199 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 16 Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: pharmacy_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: medical_inventory_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache & Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: pharmacy_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pharmacy_gateway
+    restart: always
+    command: npm run dev:gateway
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - INVENTORY_SERVICE_URL=http://product-inventory-service:5002
+      - POS_SERVICE_URL=http://pos-sales-service:5003
+      - PROCUREMENT_SERVICE_URL=http://procurement-service:5004
+      - ACCOUNTING_SERVICE_URL=http://accounting-service:5005
+      - HR_SERVICE_URL=http://hr-payroll-service:5006
+      - ORDER_SERVICE_URL=http://order-delivery-service:5007
+      - REPORTS_SERVICE_URL=http://reports-bi-service:5008
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Auth & Tenancy Microservice
+  auth-service:
+    build: .
+    container_name: pharmacy_auth_service
+    command: npm run dev:auth
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ENV=development
+      - AUTH_SERVICE_PORT=5001
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Product & Inventory (FEFO) Microservice
+  product-inventory-service:
+    build: .
+    container_name: pharmacy_inventory_service
+    command: npm run dev:inventory
+    ports:
+      - "5002:5002"
+    environment:
+      - NODE_ENV=development
+      - INVENTORY_SERVICE_PORT=5002
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # POS & Sales Microservice
+  pos-sales-service:
+    build: .
+    container_name: pharmacy_pos_service
+    command: npm run dev:pos
+    ports:
+      - "5003:5003"
+    environment:
+      - NODE_ENV=development
+      - POS_SERVICE_PORT=5003
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Procurement Microservice
+  procurement-service:
+    build: .
+    container_name: pharmacy_procurement_service
+    command: npm run dev:procurement
+    ports:
+      - "5004:5004"
+    environment:
+      - NODE_ENV=development
+      - PROCUREMENT_SERVICE_PORT=5004
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Accounting Microservice
+  accounting-service:
+    build: .
+    container_name: pharmacy_accounting_service
+    command: npm run dev:accounting
+    ports:
+      - "5005:5005"
+    environment:
+      - NODE_ENV=development
+      - ACCOUNTING_SERVICE_PORT=5005
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # HR & Payroll Microservice
+  hr-payroll-service:
+    build: .
+    container_name: pharmacy_hr_service
+    command: npm run dev:hr
+    ports:
+      - "5006:5006"
+    environment:
+      - NODE_ENV=development
+      - HR_SERVICE_PORT=5006
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Order & Delivery Microservice
+  order-delivery-service:
+    build: .
+    container_name: pharmacy_order_service
+    command: npm run dev:orders
+    ports:
+      - "5007:5007"
+    environment:
+      - NODE_ENV=development
+      - ORDER_SERVICE_PORT=5007
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Reports & BI Analytics Microservice
+  reports-bi-service:
+    build: .
+    container_name: pharmacy_reports_service
+    command: npm run dev:reports
+    ports:
+      - "5008:5008"
+    environment:
+      - NODE_ENV=development
+      - REPORTS_SERVICE_PORT=5008
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
