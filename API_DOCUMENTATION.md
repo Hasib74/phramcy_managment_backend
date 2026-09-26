@@ -1,7 +1,7 @@
 # 📖 Pharmacy Business Operating System — Complete API Documentation
 
-> **Base URL**: `http://localhost:5050/api/v1`  
-> **Health Check**: `http://localhost:5050/api/health`  
+> **Base URL**: `https://phramcy-managment-backend.onrender.com/api/v1`  
+> **Health Check**: `https://phramcy-managment-backend.onrender.com/api/health`  
 > **Authentication**: Bearer Token (`Authorization: Bearer <JWT_ACCESS_TOKEN>`)  
 > **Multi-Branch Context Header**: `x-branch-id: <BRANCH_UUID>`  
 > **Correlation Tracking Header**: `X-Correlation-ID: <UUID>` (Optional, auto-generated)

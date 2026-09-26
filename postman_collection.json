@@ -6,7 +6,7 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:5050/api/v1", "type": "string" },
+    { "key": "baseUrl", "value": "https://phramcy-managment-backend.onrender.com/api/v1", "type": "string" },
     { "key": "token", "value": "", "type": "string" },
     { "key": "branchId", "value": "", "type": "string" },
     { "key": "organizationId", "value": "", "type": "string" }
@@ -21,10 +21,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5050/api/health",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "5050",
+              "raw": "https://phramcy-managment-backend.onrender.com/api/health",
+              "protocol": "https",
+              "host": ["phramcy-managment-backend", "onrender", "com"],
               "path": ["api", "health"]
             }
           },
@@ -34,10 +33,9 @@
               "originalRequest": {
                 "method": "GET",
                 "url": {
-                  "raw": "http://localhost:5050/api/health",
-                  "protocol": "http",
-                  "host": ["localhost"],
-                  "port": "5050",
+                  "raw": "https://phramcy-managment-backend.onrender.com/api/health",
+                  "protocol": "https",
+                  "host": ["phramcy-managment-backend", "onrender", "com"],
                   "path": ["api", "health"]
                 }
               },

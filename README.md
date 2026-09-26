@@ -72,8 +72,10 @@ npm run seed
 ```bash
 npm run dev
 ```
-API server starts at: `http://localhost:5000`  
-Health check endpoint: `http://localhost:5000/api/health`
+API server starts at: `http://localhost:5050`  
+Health check endpoint: `http://localhost:5050/api/health`  
+Live Production Deployment: `https://phramcy-managment-backend.onrender.com/api/v1`  
+Live Health Check: `https://phramcy-managment-backend.onrender.com/api/health`
 
 ---
 
